@@ -99,11 +99,13 @@ public class FlowConfig {
     public IntegrationFlow messageProcessFlow() {
         return IntegrationFlows.from(START_MESSAGE_PROCESS_CHANNEL)
                 .wireTap(WIRETAP_CHANNEL)
-                .wireTap(WIRETAP_CHANNEL)
                 .handle(messageLogger, "handleMessage")
                 .get();
     }
 
+    /**
+     * WireTapping intercepts the flow where it is called (.wireTap(...)) without disrupting the original flow.
+     */
     @Bean
     public IntegrationFlow wireTapFlow() {
         return IntegrationFlows.from(WIRETAP_CHANNEL)
