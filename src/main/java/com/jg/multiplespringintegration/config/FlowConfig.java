@@ -4,6 +4,7 @@ import com.jg.multiplespringintegration.model.FlowRequestModel;
 import com.jg.multiplespringintegration.service.MessageLogger;
 import com.jg.multiplespringintegration.service.WireTapLogger;
 import com.jg.multiplespringintegration.transformer.FileToTextTranformer;
+import com.jg.multiplespringintegration.transformer.MailToTextTransformer;
 import com.jg.multiplespringintegration.transformer.WebToTextTransformer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,11 +14,12 @@ import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.integration.file.FileReadingMessageSource;
 import org.springframework.integration.http.inbound.HttpRequestHandlingMessagingGateway;
 import org.springframework.integration.http.inbound.RequestMapping;
-import org.springframework.messaging.MessageChannel;
+import org.springframework.integration.mail.ImapMailReceiver;
+import org.springframework.integration.mail.MailReceiver;
+import org.springframework.integration.mail.MailReceivingMessageSource;
 
 import java.io.File;
 
@@ -29,20 +31,22 @@ public class FlowConfig {
 
     public static final String FILE_SOURCING_CHANNEL = "fileSourcingChannel";
     public static final String WEB_SOURCING_CHANNEL = "webSourcingChannel";
-    public static final String WEB_REPLY_CHANNEL = "webReplyChannel";
+    public static final String MAIL_SOURCING_CHANNEL = "mailSourcingChannel";
 
     public static final String START_MESSAGE_PROCESS_CHANNEL = "startMessageProcessChannel";
     public static final String WIRETAP_CHANNEL = "wireTapChannel";
 
     private final FileToTextTranformer fileToTextTranformer;
     private final WebToTextTransformer webToTextTransformer;
+    private final MailToTextTransformer mailToTextTransformer;
+
     private final MessageLogger messageLogger;
     private final WireTapLogger wireTapLogger;
 
     /** INBOUND **/
     // File
     @Bean
-    @InboundChannelAdapter(value = FILE_SOURCING_CHANNEL, poller = @Poller(fixedDelay = "1000", maxMessagesPerPoll = "-1"))
+    @InboundChannelAdapter(value = FILE_SOURCING_CHANNEL, poller = @Poller(fixedDelay = "5000", maxMessagesPerPoll = "-1"))
     public FileReadingMessageSource fileReadingMessageSource() {
         final FileReadingMessageSource fileReader = new FileReadingMessageSource();
         fileReader.setDirectory(new File("source"));
@@ -56,7 +60,6 @@ public class FlowConfig {
         gateway.setRequestMapping(requestMapping());
         gateway.setRequestPayloadType(ResolvableType.forClass(FlowRequestModel.class));
         gateway.setRequestChannelName(WEB_SOURCING_CHANNEL);
-        gateway.setReplyChannel(webReplyChannel());
         return gateway;
     }
 
@@ -69,9 +72,17 @@ public class FlowConfig {
     }
 
     @Bean
-    public MessageChannel webReplyChannel() {
-        return MessageChannels.direct(WEB_REPLY_CHANNEL)
-                .get();
+    @InboundChannelAdapter(value = MAIL_SOURCING_CHANNEL, poller = @Poller(fixedDelay = "5000", maxMessagesPerPoll = "-1"))
+    public MailReceivingMessageSource mailReceivingMessageSource() {
+        return new MailReceivingMessageSource(mailReceiver());
+    }
+
+    @Bean
+    public MailReceiver mailReceiver() {
+        final ImapMailReceiver imapMailReceiver = new ImapMailReceiver("imaps://ganni.dow:JohnDoe123!@imap.gmail.com:993/INBOX");
+        imapMailReceiver.setShouldMarkMessagesAsRead(false);
+        imapMailReceiver.setSimpleContent(true);
+        return imapMailReceiver;
     }
 
     /** TRANSFORMERS **/
@@ -89,6 +100,14 @@ public class FlowConfig {
     public IntegrationFlow httpToMessageFlow() {
         return IntegrationFlows.from(WEB_SOURCING_CHANNEL)
                 .transform(webToTextTransformer)
+                .channel(START_MESSAGE_PROCESS_CHANNEL)
+                .get();
+    }
+
+    @Bean
+    public IntegrationFlow mailToMessageFlow() {
+        return IntegrationFlows.from(MAIL_SOURCING_CHANNEL)
+                .transform(mailToTextTransformer)
                 .channel(START_MESSAGE_PROCESS_CHANNEL)
                 .get();
     }
