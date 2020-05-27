@@ -1,4 +1,4 @@
-package com.jg.multiplespringintegration.transformer;
+package com.jg.springintegration.transformer;
 
 import lombok.SneakyThrows;
 import org.springframework.integration.transformer.GenericTransformer;
@@ -36,7 +36,7 @@ public class MailToTextTransformer implements GenericTransformer<Message<Object>
                 result = result + getTextFromMimeMultipart((MimeMultipart)bodyPart.getContent());
             }
         }
-        return result;
+        return result.trim();
     }
 
 }

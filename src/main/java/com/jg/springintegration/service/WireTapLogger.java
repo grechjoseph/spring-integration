@@ -1,4 +1,4 @@
-package com.jg.multiplespringintegration.service;
+package com.jg.springintegration.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -9,6 +9,6 @@ import org.springframework.stereotype.Service;
 public class WireTapLogger {
 
     public void handleMessage(final Message<String> message) {
-        log.info("[WireTap] Received message: {}", message.getPayload());
+        log.info("[WireTap] Received message: \n{}", message.getPayload());
     }
 }

@@ -1,4 +1,4 @@
-package com.jg.multiplespringintegration.transformer;
+package com.jg.springintegration.transformer;
 
 import lombok.SneakyThrows;
 import org.springframework.integration.transformer.GenericTransformer;

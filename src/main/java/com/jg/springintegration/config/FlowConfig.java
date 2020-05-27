@@ -1,11 +1,11 @@
-package com.jg.multiplespringintegration.config;
+package com.jg.springintegration.config;
 
-import com.jg.multiplespringintegration.model.FlowRequestModel;
-import com.jg.multiplespringintegration.service.MessageLogger;
-import com.jg.multiplespringintegration.service.WireTapLogger;
-import com.jg.multiplespringintegration.transformer.FileToTextTranformer;
-import com.jg.multiplespringintegration.transformer.MailToTextTransformer;
-import com.jg.multiplespringintegration.transformer.WebToTextTransformer;
+import com.jg.springintegration.model.FlowRequestModel;
+import com.jg.springintegration.service.MessageLogger;
+import com.jg.springintegration.service.WireTapLogger;
+import com.jg.springintegration.transformer.FileToTextTranformer;
+import com.jg.springintegration.transformer.MailToTextTransformer;
+import com.jg.springintegration.transformer.WebToTextTransformer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,11 +15,16 @@ import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.file.FileReadingMessageSource;
+import org.springframework.integration.graph.IntegrationGraphServer;
+import org.springframework.integration.http.config.EnableIntegrationGraphController;
 import org.springframework.integration.http.inbound.HttpRequestHandlingMessagingGateway;
 import org.springframework.integration.http.inbound.RequestMapping;
 import org.springframework.integration.mail.ImapMailReceiver;
 import org.springframework.integration.mail.MailReceiver;
 import org.springframework.integration.mail.MailReceivingMessageSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import java.io.File;
 
@@ -27,6 +32,7 @@ import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableIntegrationGraphController
 public class FlowConfig {
 
     public static final String FILE_SOURCING_CHANNEL = "fileSourcingChannel";
@@ -42,6 +48,23 @@ public class FlowConfig {
 
     private final MessageLogger messageLogger;
     private final WireTapLogger wireTapLogger;
+
+    /** CONFIG **/
+
+    @Bean
+    public IntegrationGraphServer integrationGraphServer() {
+        return new IntegrationGraphServer();
+    }
+
+    @Bean
+    public WebMvcConfigurer webMvcConfigurer() {
+        return new WebMvcConfigurerAdapter() {
+            @Override
+            public void addCorsMappings(final CorsRegistry registry) {
+                registry.addMapping("/**");
+            }
+        };
+    }
 
     /** INBOUND **/
     // File

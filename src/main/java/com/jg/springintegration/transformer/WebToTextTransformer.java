@@ -1,6 +1,6 @@
-package com.jg.multiplespringintegration.transformer;
+package com.jg.springintegration.transformer;
 
-import com.jg.multiplespringintegration.model.FlowRequestModel;
+import com.jg.springintegration.model.FlowRequestModel;
 import org.springframework.integration.transformer.GenericTransformer;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;

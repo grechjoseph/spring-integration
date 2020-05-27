@@ -1,4 +1,4 @@
-package com.jg.multiplespringintegration.model;
+package com.jg.springintegration.model;
 
 import lombok.Data;
 
